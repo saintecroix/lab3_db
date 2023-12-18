@@ -1,7 +1,10 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
+	"fmt"
+	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"net/http"
 	"os"
@@ -13,6 +16,13 @@ type application struct {
 }
 
 func main() {
+	db, errsql := sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/lab3")
+	if errsql != nil {
+		panic(errsql)
+	}
+	defer db.Close()
+	fmt.Println("Подключено к MySQL")
+
 	addr := flag.String("addr", ":4000", "Сетевой адрес веб-сервера")
 	flag.Parse()
 
@@ -33,4 +43,5 @@ func main() {
 	infoLog.Printf("Запуск сервера на %s", *addr)
 	err := srv.ListenAndServe()
 	errorLog.Fatal(err)
+
 }
