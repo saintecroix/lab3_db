@@ -56,6 +56,11 @@ a {
     text-decoration: none;
 }
 
+t {
+    color: #000000;
+    text-decoration: none;
+}
+
 a:hover {
     color: #3b5bcb;
     text-decoration: underline;
@@ -253,4 +258,46 @@ form div:last-child {
 }
 .content {
     flex: 1 0 auto;
+}
+
+label {
+    display: flex;
+    font:
+            1rem 'Fira Sans',
+            sans-serif;
+}
+
+input,
+label {
+    margin: 0.4rem 0;
+}
+
+select {
+    font-size: 0.9rem;
+    padding: 2px 5px;
+}
+
+t.butt {
+    text-align:center;
+    font-size:13px;
+    text-decoration: none;
+    font-weight: 700;
+    padding: 3px 6px;
+    background: #eaeef1;
+    width: auto;
+    margin: 20px auto;
+    background-image: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,.1));
+    border-radius: 3px;
+    color: rgba(0,0,0,.6);
+    text-shadow: 0 1px 1px rgba(255,255,255,.7);
+    box-shadow: 0 0 0 1px rgba(0,0,0,.2), 0 1px 2px rgba(0,0,0,.2), inset 0 1px 2px rgba(255,255,255,.7);
+}
+
+t.butt:hover, t.butt.hover {
+    background: #fff;
+}
+t.butt:active, t.butt.active {
+    background: #d0d3d6;
+    background-image: linear-gradient(rgba(0,0,0,.1), rgba(0,0,0,0));
+    box-shadow: inset 0 0 2px rgba(0,0,0,.2), inset 0 2px 5px rgba(0,0,0,.2), 0 1px rgba(255,255,255,.2);
 }
