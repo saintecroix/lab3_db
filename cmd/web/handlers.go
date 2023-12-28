@@ -37,11 +37,11 @@ type Consignee struct {
 	Id         int
 	Name       string
 	OKPO       string
-	Was_sender bool
+	Was_sender int
 }
 
 func getConsignee(db *sql.DB) []Consignee {
-	gruz, err := db.Query("Select * from сonsignee")
+	gruz, err := db.Query("Select * from consignee")
 	if err != nil {
 		panic(err)
 	}
@@ -222,23 +222,23 @@ func (app *application) input(w http.ResponseWriter, r *http.Request) {
 
 	defer db.Close()
 
-	Goods := getGruz(db)
-
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
 		app.serverError(w, err) // Использование помощника serverError()
 	}
 
-	//errExTemp := ts.ExecuteTemplate(w, "app.input", Goods)
-	//if errExTemp != nil {
-	//	app.serverError(w, errExTemp)
-	//}
-
 	type Jopa struct {
-		Goods []Gruz
+		Gruz      []Gruz
+		Consignee []Consignee
+		Region    []Region
+		Road      []Road
+		State     []State
+		Station   []Station
+		Wagon     []Wagon
 	}
 
-	err = ts.Execute(w, Jopa{Goods: Goods})
+	err = ts.Execute(w, Jopa{Gruz: getGruz(db), Consignee: getConsignee(db), Region: getRegion(db), Road: getRoad(db),
+		State: getState(db), Station: getStation(db), Wagon: getWagon(db)})
 	if err != nil {
 		app.serverError(w, err) // Использование помощника serverError()
 	}
@@ -246,7 +246,7 @@ func (app *application) input(w http.ResponseWriter, r *http.Request) {
 
 /*----------------------------------------------------------------------------------------*/
 
-func (app *application) save_article(w http.ResponseWriter, r *http.Request) {
+func (app *application) save_application(w http.ResponseWriter, r *http.Request) {
 	Number := r.FormValue("Number")
 	Reg_date := r.FormValue("Reg_date")
 	Status := r.FormValue("Status")
