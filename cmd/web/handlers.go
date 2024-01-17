@@ -617,6 +617,234 @@ func (app *application) save_road(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/input", http.StatusSeeOther)
 }
 
+/*----------------------------------------------------------------------------------------*/
+
+func (app *application) add_consignee(w http.ResponseWriter, r *http.Request) {
+	files := []string{
+		"./ui/html/add_consignee.page.tmpl",
+		"./ui/html/base.layout.tmpl",
+		"./ui/html/footer.partial.tmpl",
+	}
+
+	db, errsql := sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/lab3")
+	if errsql != nil {
+		panic(errsql)
+	}
+
+	defer db.Close()
+
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		app.serverError(w, err) // Использование помощника serverError()
+		return
+	}
+
+	type Jopa struct {
+		Consignee []Consignee
+	}
+
+	err = ts.Execute(w, Jopa{Consignee: getConsignee(db)})
+	if err != nil {
+		app.serverError(w, err) // Использование помощника serverError()
+		return
+	}
+}
+
+/*----------------------------------------------------------------------------------------*/
+
+func (app *application) save_consignee(w http.ResponseWriter, r *http.Request) {
+	name := r.FormValue("Name")
+	okpo := r.FormValue("OKPO")
+	var a int
+	if r.FormValue("Was_sender") != "" {
+		a = 1
+	} else {
+		a = 0
+	}
+
+	db, errsql := sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/lab3")
+	if errsql != nil {
+		panic(errsql)
+	}
+
+	defer db.Close()
+
+	insert, err := db.Query(fmt.Sprintf("INSERT INTO `consignee` "+
+		"(`Name`, `OKPO`, `Was_sender`) VALUES('%s', '%s', '%d')", name, okpo, a))
+
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	defer insert.Close()
+
+	http.Redirect(w, r, "/input", http.StatusSeeOther)
+}
+
+/*----------------------------------------------------------------------------------------*/
+
+func (app *application) add_wagon(w http.ResponseWriter, r *http.Request) {
+	files := []string{
+		"./ui/html/add_wagon.page.tmpl",
+		"./ui/html/base.layout.tmpl",
+		"./ui/html/footer.partial.tmpl",
+	}
+
+	db, errsql := sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/lab3")
+	if errsql != nil {
+		panic(errsql)
+	}
+
+	defer db.Close()
+
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		app.serverError(w, err) // Использование помощника serverError()
+		return
+	}
+
+	type Jopa struct {
+		Wagon []Wagon
+	}
+
+	err = ts.Execute(w, Jopa{Wagon: getWagon(db)})
+	if err != nil {
+		app.serverError(w, err) // Использование помощника serverError()
+		return
+	}
+}
+
+/*----------------------------------------------------------------------------------------*/
+
+func (app *application) save_wagon(w http.ResponseWriter, r *http.Request) {
+	name := r.FormValue("Name")
+
+	db, errsql := sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/lab3")
+	if errsql != nil {
+		panic(errsql)
+	}
+
+	defer db.Close()
+
+	insert, err := db.Query(fmt.Sprintf("INSERT INTO `wagon` "+
+		"(`Name`) VALUES('%s')", name))
+
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	defer insert.Close()
+
+	http.Redirect(w, r, "/input", http.StatusSeeOther)
+}
+
+/*----------------------------------------------------------------------------------------*/
+
+type Average struct {
+	Month_reg_date      int
+	Avg_transport_level float32
+}
+
+type RegPop struct {
+	FrstReg string
+	SecReg  string
+	Usages  int64
+}
+
+type PopRoad struct {
+	FrstRoad string
+	SecRoad  string
+	Usage    int64
+}
+
+func (app *application) stats(w http.ResponseWriter, r *http.Request) {
+	files := []string{
+		"./ui/html/stats.page.tmpl",
+		"./ui/html/base.layout.tmpl",
+		"./ui/html/footer.partial.tmpl",
+	}
+
+	db, errsql := sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/lab3")
+	if errsql != nil {
+		panic(errsql)
+	}
+
+	defer db.Close()
+
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		app.serverError(w, err) // Использование помощника serverError()
+		return
+	}
+
+	avg, err := db.Query("SELECT month(reg_date) AS month_reg_date, avg(n_transportations) AS " +
+		"avg_transport_level FROM (SELECT reg_date, count(*) AS n_transportations FROM application GROUP BY reg_date) " +
+		"AS q GROUP BY month(reg_date);")
+	if err != nil {
+		app.serverError(w, err)
+	}
+
+	avgRez := make([]Average, 0)
+
+	for avg.Next() {
+		var a Average
+		err := avg.Scan(&a.Month_reg_date, &a.Avg_transport_level)
+		if err != nil {
+			panic(err)
+		}
+		avgRez = append(avgRez, a)
+	}
+
+	popReg, err := db.Query("SELECT o.Name, oo.Name, count(*) as n FROM (application AS h INNER JOIN region AS o" +
+		" ON h.Region_depart=o.id) INNER JOIN region AS oo ON h.Region_destination=oo.ID GROUP BY o.Name, oo.Name ORDER BY count(*) DESC;")
+	if err != nil {
+		app.serverError(w, err)
+	}
+
+	rezReg := make([]RegPop, 0)
+
+	for popReg.Next() {
+		var a RegPop
+		err := popReg.Scan(&a.FrstReg, &a.SecReg, &a.Usages)
+		if err != nil {
+			panic(err)
+		}
+		rezReg = append(rezReg, a)
+	}
+
+	popRoad, err := db.Query("SELECT d.Name, do.Name, q.n_transportations FROM (SELECT Road_depart, Road_destination, " +
+		"count(*) AS n_transportations FROM application GROUP BY Road_depart, Road_destination) AS q INNER JOIN road AS d ON " +
+		"d.id = q.Road_depart INNER JOIN road AS do ON do.id=q.Road_destination ORDER BY q.n_transportations DESC LIMIT 10;")
+	if err != nil {
+		app.serverError(w, err)
+	}
+
+	rezRoad := make([]PopRoad, 0)
+
+	for popRoad.Next() {
+		var a PopRoad
+		err := popRoad.Scan(&a.FrstRoad, &a.SecRoad, &a.Usage)
+		if err != nil {
+			panic(err)
+		}
+		rezRoad = append(rezRoad, a)
+	}
+
+	type Jopa struct {
+		RezReg  []RegPop
+		AvgRez  []Average
+		RezRoad []PopRoad
+	}
+
+	err = ts.Execute(w, Jopa{RezReg: rezReg, AvgRez: avgRez, RezRoad: rezRoad})
+	if err != nil {
+		app.serverError(w, err) // Использование помощника serverError()
+		return
+	}
+}
+
+/*----------------------------------------------------------------------------------------*/
+
 //func getid(db *sql.DB, col string, name string) int {
 //	raw, err := db.Query(fmt.Sprintf("SELECT id from %s where Name = %s", col, name))
 //	if err != nil {

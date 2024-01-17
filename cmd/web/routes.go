@@ -19,6 +19,11 @@ func (app *application) routes() *http.ServeMux {
 	m.HandleFunc("/save_region", app.save_region)
 	m.HandleFunc("/add_road", app.add_road)
 	m.HandleFunc("/save_road", app.save_road)
+	m.HandleFunc("/add_consignee", app.add_consignee)
+	m.HandleFunc("/save_consignee", app.save_consignee)
+	m.HandleFunc("/add_wagon", app.add_wagon)
+	m.HandleFunc("/save_wagon", app.save_wagon)
+	m.HandleFunc("/stats", app.stats)
 
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
 	m.Handle("/static/", http.StripPrefix("/static", fileServer))

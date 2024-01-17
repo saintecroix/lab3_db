@@ -96,7 +96,7 @@
             {{ range .Consignee }}
             {{ if .Was_sender}}<option value="{{ .Id }}">{{ .Name }}</option>{{ end }}
             {{ end }}
-        </select> <a href="#" class="butt">Добавить грузоотправителя/грузополучателя</a>
+        </select> <a href="/add_consignee" class="butt">Добавить грузоотправителя/грузополучателя</a>
     </p>
     <p>
         <label>Государство назначения: </label>
@@ -150,7 +150,7 @@
             {{ range .Consignee }}
             <option value="{{ .Id }}">{{ .Name }}</option>
             {{ end }}
-        </select> <a href="#" class="butt">Добавить грузоотправителя/грузополучателя</a>
+        </select> <a href="/add_consignee" class="butt">Добавить грузоотправителя/грузополучателя</a>
     </p>
     <p>
         <label>Тип вагона: </label>
@@ -159,7 +159,7 @@
             {{ range .Wagon }}
             <option value="{{ .Id }}">{{ .Name }}</option>
             {{ end }}
-        </select> <a href="#" class="butt">Добавить тип вагона</a>
+        </select> <a href="/add_wagon" class="butt">Добавить тип вагона</a>
     </p>
     <p>
         <label>Призн собств вагона: </label>
