@@ -163,6 +163,50 @@ type Wagon struct {
 	Id   int
 	Name string
 }
+type AllInfo struct {
+	Gruz      []Gruz
+	Consignee []Consignee
+	Region    []Region
+	Road      []Road
+	State     []State
+	Station   []Station
+}
+type Application struct {
+	Id                  int
+	Number              int
+	Reg_date            string
+	Status              string
+	Provide_date        string
+	Departure_type      string
+	Goods               string
+	Origin_state        string
+	Enter_station       string
+	Region_depart       string
+	Road_depart         string
+	Station_depart      string
+	Consigner           string
+	State_destination   string
+	Exit_station        string
+	Region_destination  string
+	Road_destination    string
+	Station_destination string
+	Consignee           string
+	Wagon_type          string
+	Property            string
+	Wagon_owner         string
+	Payer               string
+	Road_owner          string
+	Transport_manager   string
+	Tons_declared       int
+	Tons_accepted       int
+	Wagon_declared      int
+	Wagon_accepted      int
+	Filing_date         string
+	Agreement_date      string
+	Approval_date       string
+	Start_date          string
+	Stop_date           string
+}
 
 func getWagon(db *sql.DB) []Wagon {
 	gruz, err := db.Query("Select * from wagon")
@@ -225,7 +269,7 @@ func (app *application) input(w http.ResponseWriter, r *http.Request) {
 
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
-		app.serverError(w, err) // Использование помощника serverError()
+		app.serverError(w, err)
 		return
 	}
 
@@ -242,7 +286,7 @@ func (app *application) input(w http.ResponseWriter, r *http.Request) {
 	err = ts.Execute(w, Jopa{Gruz: getGruz(db), Consignee: getConsignee(db), Region: getRegion(db), Road: getRoad(db),
 		State: getState(db), Station: getStation(db), Wagon: getWagon(db)})
 	if err != nil {
-		app.serverError(w, err) // Использование помощника serverError()
+		app.serverError(w, err)
 		return
 	}
 }
@@ -845,16 +889,116 @@ func (app *application) stats(w http.ResponseWriter, r *http.Request) {
 
 /*----------------------------------------------------------------------------------------*/
 
-//func getid(db *sql.DB, col string, name string) int {
-//	raw, err := db.Query(fmt.Sprintf("SELECT id from %s where Name = %s", col, name))
-//	if err != nil {
-//		panic(err)
-//	}
-//	defer raw.Close()
-//	var res int
-//	errrod := raw.Scan(&res)
-//	if errrod != nil {
-//		panic(errrod)
-//	}
-//	return res
-//}
+func (app *application) soloSearch(w http.ResponseWriter, r *http.Request) {
+	where := r.FormValue("Goods")
+	what := r.FormValue("searchText")
+
+	files := []string{
+		"./ui/html/soloSearch.page.tmpl",
+		"./ui/html/base.layout.tmpl",
+		"./ui/html/footer.partial.tmpl",
+	}
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		app.serverError(w, err) // Использование помощника serverError()
+		return
+	}
+
+	if r.Method == http.MethodPost {
+		db, errsql := sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/lab3")
+		if errsql != nil {
+			panic(errsql)
+		}
+
+		defer db.Close()
+
+		Rez := make([]Application, 0)
+
+		switch where {
+		case "Goods":
+			Rez = getApplication(app, db, w, " WHERE g.Name like '%%s%'", what)
+		case "Origin_state":
+			Rez = getApplication(app, db, w, " WHERE state.Name like '%%s%'", what)
+		case "State_destination":
+			Rez = getApplication(app, db, w, " WHERE state1.Name like '%%s%'", what)
+		case "Region_depart":
+			Rez = getApplication(app, db, w, " WHERE reg.Name like '%%s%'", what)
+		case "Region_destination":
+			Rez = getApplication(app, db, w, " WHERE reg1.Name like '%%s%'", what)
+		case "Road_depart":
+			Rez = getApplication(app, db, w, " WHERE r.Name like '%%s%'", what)
+		case "Road_destination":
+			Rez = getApplication(app, db, w, " WHERE r1.Name like '%%s%'", what)
+		case "Station_depart":
+			Rez = getApplication(app, db, w, " WHERE st1.Name like '%%s%'", what)
+		case "Exit_station":
+			Rez = getApplication(app, db, w, " WHERE st2.Name like '%%s%'", what)
+		case "Enter_station":
+			Rez = getApplication(app, db, w, " WHERE st.Name like '%%s%'", what)
+		case "Station_destination":
+			Rez = getApplication(app, db, w, " WHERE st3.Name like '%%s%'", what)
+		case "Consigner":
+			Rez = getApplication(app, db, w, " WHERE con.Name like '%%s%'", what)
+		case "Consignee":
+			Rez = getApplication(app, db, w, " WHERE con1.Name like '%%s%'", what)
+		case "Wagon_type":
+			Rez = getApplication(app, db, w, " WHERE w.Name like '%%s%'", what)
+		case "status":
+			Rez = getApplication(app, db, w, " WHERE a.Status like '%$1%'", what)
+		}
+		err = ts.Execute(w, Rez)
+		if err != nil {
+			app.serverError(w, err) // Использование помощника serverError()
+		}
+	} else {
+		err = ts.Execute(w, nil)
+		if err != nil {
+			app.serverError(w, err) // Использование помощника serverError()
+		}
+	}
+}
+
+func (app *application) duoSearch(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func getApplication(app *application, db *sql.DB, w http.ResponseWriter, whereString string, what string) []Application {
+	sel := "select a.id, a.Number, a.Reg_date, a.Status, a.Provide_date, a.Departure_type, g.Name as Goods, state.Name " +
+		"as Origin_state, st.Name as Enter_station, reg.Name as Region_depart, r.Name as Road_depart, st1.Name as " +
+		"Station_depart, con.Name as Consigner, state1.Name as State_destination, st2.Name as Exit_station, reg1.Name " +
+		"as Region_destination, r1.Name as Road_destination, st3.Name as Station_destination, con1.Name as Consignee, " +
+		"w.Name as Wagon_type, a.Property, a.Wagon_owner, a.Payer, a.Road_owner, a.Transport_manager, a.Tons_declared, " +
+		"a.Tons_accepted, a.Wagon_declared, a.Wagon_accepted, a.Filing_date, a.Agreement_date, a.Approval_date, " +
+		"a.Start_date, a.Stop_date from application as a inner join gruz as g on a.Goods=g.id inner join state on " +
+		"a.Origin_state=state.id inner join station as st on a.Enter_station=st.id inner join region as reg on " +
+		"a.Region_depart=reg.id inner join road as r on a.Road_depart=r.id inner join (select * from station) " +
+		"as st1 on a.Station_depart=st1.id inner join consignee as con on a.Consigner=con.id inner join (select * from " +
+		"state) as state1 on a.State_destination=state1.id inner join (select * from station) as st2 on " +
+		"a.Exit_station=st2.id inner join (select * from region) as reg1 on a.Region_destination=reg1.id inner join " +
+		"(select * from road) as r1 on a.Road_destination=r1.id inner join (select * from station) as st3 on " +
+		"a.Station_destination=st3.id inner join (select * from consignee) as con1 on a.Consignee=con1.id inner join " +
+		"wagon as w on a.Wagon_type=w.id"
+
+	rez := make([]Application, 0)
+	get, err := db.Query(fmt.Sprintf(sel+whereString, what))
+	if err != nil {
+		app.serverError(w, err)
+	}
+	defer get.Close()
+	for get.Next() {
+		var v Application
+		err := get.Scan(&v.Id, &v.Number, &v.Reg_date, &v.Status, &v.Provide_date, &v.Departure_type, &v.Goods,
+			&v.Origin_state, &v.Enter_station, &v.Region_depart, &v.Road_depart, &v.Station_depart, &v.Consigner,
+			&v.State_destination, &v.Exit_station, &v.Region_destination, &v.Road_destination, &v.Station_destination,
+			&v.Consignee, &v.Wagon_type, &v.Property, &v.Wagon_owner, &v.Payer, &v.Road_owner, &v.Transport_manager,
+			&v.Tons_declared, &v.Tons_accepted, &v.Wagon_declared, &v.Wagon_accepted, &v.Filing_date, &v.Agreement_date,
+			&v.Approval_date, &v.Start_date, &v.Stop_date)
+		if err != nil {
+			app.serverError(w, err)
+		}
+		rez = append(rez, v)
+	}
+	return rez
+}
+
+/*----------------------------------------------------------------------------------------*/

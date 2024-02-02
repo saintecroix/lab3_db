@@ -1,8 +1,17 @@
-var navLinks = document.querySelectorAll("nav a");
-for (var i = 0; i < navLinks.length; i++) {
-	var link = navLinks[i]
-	if (link.getAttribute('href') == window.location.pathname) {
-		link.classList.add("live");
-		break;
+let select = document.getElementById("Goods");
+
+if(select ){
+	select.addEventListener("change", myFunction);
+}
+
+
+function myFunction() {
+	let select = document.getElementById("Goods");
+	let textInput = document.getElementById("text");
+	let textLabel = document.getElementById("ltext");
+	if (select.value !== "") {
+		textInput.style = "display: content";
+		textLabel.style = "display: content";
 	}
 }
+console.log("test")
