@@ -11,13 +11,13 @@ body {
 
 header, nav, main, footer {
     padding: 2px calc((100% - 800px) / 2) 0;
+    max-width: 2000px;
 }
 
 main {
     margin-top: 54px;
     margin-bottom: 54px;
     min-height: calc(100vh - 345px);
-    overflow: auto;
 }
 
 h1 a {
@@ -66,7 +66,6 @@ header {
     background-size: 100%;
     background-repeat: no-repeat;
     border-bottom: 1px solid #E4E5E7;
-    overflow: auto;
     padding-top: 33px;
     padding-bottom: 27px;
     text-align: center;
@@ -311,8 +310,9 @@ table {
     border-collapse: collapse;
     margin: 0;
     padding: 0;
-    width: 100%;
-    table-layout: fixed;
+    max-width: 1000px;
+    table-layout: auto;
+    overflow: auto;
 }
 
 table caption {
@@ -352,7 +352,6 @@ table th {
         clip: rect(0 0 0 0);
         height: 1px;
         margin: -1px;
-        overflow: hidden;
         padding: 0;
         position: absolute;
         width: 1px;
@@ -389,10 +388,12 @@ table th {
 
 #table-wrapper {
     height: 500px;
-    width: auto;
+    width: 100%;
+    max-width: 1000px;
     padding: 0px;
     margin: 0px auto 0px auto;
     overflow: auto;
+    display: inline-block;
 }
 
 /*

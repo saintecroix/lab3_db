@@ -904,62 +904,73 @@ func (app *application) soloSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.Method == http.MethodPost {
-		db, errsql := sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/lab3")
-		if errsql != nil {
-			panic(errsql)
-		}
+	db, errsql := sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/lab3")
+	if errsql != nil {
+		panic(errsql)
+	}
 
-		defer db.Close()
+	defer db.Close()
 
-		Rez := make([]Application, 0)
+	Rez := make([]Application, 0)
 
-		switch where {
-		case "Goods":
-			Rez = getApplication(app, db, w, " WHERE g.Name like '%%s%'", what)
-		case "Origin_state":
-			Rez = getApplication(app, db, w, " WHERE state.Name like '%%s%'", what)
-		case "State_destination":
-			Rez = getApplication(app, db, w, " WHERE state1.Name like '%%s%'", what)
-		case "Region_depart":
-			Rez = getApplication(app, db, w, " WHERE reg.Name like '%%s%'", what)
-		case "Region_destination":
-			Rez = getApplication(app, db, w, " WHERE reg1.Name like '%%s%'", what)
-		case "Road_depart":
-			Rez = getApplication(app, db, w, " WHERE r.Name like '%%s%'", what)
-		case "Road_destination":
-			Rez = getApplication(app, db, w, " WHERE r1.Name like '%%s%'", what)
-		case "Station_depart":
-			Rez = getApplication(app, db, w, " WHERE st1.Name like '%%s%'", what)
-		case "Exit_station":
-			Rez = getApplication(app, db, w, " WHERE st2.Name like '%%s%'", what)
-		case "Enter_station":
-			Rez = getApplication(app, db, w, " WHERE st.Name like '%%s%'", what)
-		case "Station_destination":
-			Rez = getApplication(app, db, w, " WHERE st3.Name like '%%s%'", what)
-		case "Consigner":
-			Rez = getApplication(app, db, w, " WHERE con.Name like '%%s%'", what)
-		case "Consignee":
-			Rez = getApplication(app, db, w, " WHERE con1.Name like '%%s%'", what)
-		case "Wagon_type":
-			Rez = getApplication(app, db, w, " WHERE w.Name like '%%s%'", what)
-		case "status":
-			Rez = getApplication(app, db, w, " WHERE a.Status like '%$1%'", what)
-		}
-		err = ts.Execute(w, Rez)
-		if err != nil {
-			app.serverError(w, err) // Использование помощника serverError()
-		}
-	} else {
-		err = ts.Execute(w, nil)
-		if err != nil {
-			app.serverError(w, err) // Использование помощника serverError()
-		}
+	switch where {
+	case "Goods":
+		Rez = getApplication(app, db, w, " WHERE g.Name like '%%%s%%'", what)
+	case "Origin_state":
+		Rez = getApplication(app, db, w, " WHERE state.Name like '%%%s%%'", what)
+	case "State_destination":
+		Rez = getApplication(app, db, w, " WHERE state1.Name like '%%%s%%'", what)
+	case "Region_depart":
+		Rez = getApplication(app, db, w, " WHERE reg.Name like '%%%s%%'", what)
+	case "Region_destination":
+		Rez = getApplication(app, db, w, " WHERE reg1.Name like '%%%s%%'", what)
+	case "Road_depart":
+		Rez = getApplication(app, db, w, " WHERE r.Name like '%%%s%%'", what)
+	case "Road_destination":
+		Rez = getApplication(app, db, w, " WHERE r1.Name like '%%%s%%'", what)
+	case "Station_depart":
+		Rez = getApplication(app, db, w, " WHERE st1.Name like '%%%s%%'", what)
+	case "Exit_station":
+		Rez = getApplication(app, db, w, " WHERE st2.Name like '%%%s%%'", what)
+	case "Enter_station":
+		Rez = getApplication(app, db, w, " WHERE st.Name like '%%%s%%'", what)
+	case "Station_destination":
+		Rez = getApplication(app, db, w, " WHERE st3.Name like '%%%s%%'", what)
+	case "Consigner":
+		Rez = getApplication(app, db, w, " WHERE con.Name like '%%%s%%'", what)
+	case "Consignee":
+		Rez = getApplication(app, db, w, " WHERE con1.Name like '%%%s%%'", what)
+	case "Wagon_type":
+		Rez = getApplication(app, db, w, " WHERE w.Name like '%%%s%%'", what)
+	case "Status":
+		Rez = getApplication(app, db, w, " WHERE a.Status like '%%%s%%'", what)
+	}
+
+	type Jopa struct {
+		Rez []Application
+	}
+	err = ts.Execute(w, Jopa{Rez: Rez})
+	if err != nil {
+		app.serverError(w, err) // Использование помощника serverError()
 	}
 }
 
 func (app *application) duoSearch(w http.ResponseWriter, r *http.Request) {
+	files := []string{
+		"./ui/html/duoSearch.page.tmpl",
+		"./ui/html/base.layout.tmpl",
+		"./ui/html/footer.partial.tmpl",
+	}
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		app.serverError(w, err) // Использование помощника serverError()
+		return
+	}
 
+	err = ts.Execute(w, nil)
+	if err != nil {
+		app.serverError(w, err) // Использование помощника serverError()
+	}
 }
 
 func getApplication(app *application, db *sql.DB, w http.ResponseWriter, whereString string, what string) []Application {

@@ -25,6 +25,7 @@ func (app *application) routes() *http.ServeMux {
 	m.HandleFunc("/save_wagon", app.save_wagon)
 	m.HandleFunc("/stats", app.stats)
 	m.HandleFunc("/soloSearch", app.soloSearch)
+	m.HandleFunc("/duoSearch", app.duoSearch)
 
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
 	m.Handle("/static/", http.StripPrefix("/static", fileServer))

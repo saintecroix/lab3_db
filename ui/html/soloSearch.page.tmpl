@@ -47,11 +47,12 @@
         <input type="submit" value="Поиск"/>
     </p>
     </form>
-    {{if .}}
+    {{if .Rez}}
+<div id="table-wrapper" >
     <table>
         <thead>
         <tr>
-            <th scope="col">Номер заяки</th>
+            <th scope="col">Номер заявки</th>
             <th scope="col">Дата регистрации</th>
             <th scope="col">Статус</th>
             <th scope="col">Дата подачи вагона</th>
@@ -89,7 +90,7 @@
         <tbody>
         {{ range .Rez }}
         <tr>
-            <td data-label="Номер заяки">{{ .Number }}</td>
+            <td data-label="Номер заявки">{{ .Number }}</td>
             <td data-label="Дата регистрации">{{ .Reg_date }}</td>
             <td data-label="Статус">{{ .Status }}</td>
             <td data-label="Дата подачи вагона">{{ .Provide_date }}</td>
@@ -123,10 +124,9 @@
             <td data-label="Дата начала действия">{{ .Start_date }}</td>
             <td data-label="Дата окончания действия">{{ .Stop_date }}</td>
         </tr>
-        {{else}}
-        <tr><t>Ничего не найдено</t></tr>
         {{end}}
         </tbody>
     </table>
-    {{end}}
+</div>
+{{end}}
 {{end}}

@@ -1,0 +1,50 @@
+{{template "base" .}}
+
+{{define "title"}}Поиск по двум атрибутам{{end}}
+
+{{define "main"}}
+<label>Поиск по двум атрибутам: </label>
+<form action="/duoSearch/firstItem" method="post">
+    <select id="Goods" name="Goods">
+        <option value="">Выберите первый атрибут</option>
+        <!--<option value="eNumber">Номер заявки</option>
+        <option value="eReg_date">Дата регистрации</option>-->
+        <option value="Status">Статус заявки</option>
+        <!--<option value="eProvide_date">Дата подачи вагона</option>
+        <option value="eDeparture_type">Вид отправления</option>-->
+        <option value="Goods">Наименование груза</option>
+        <option value="Origin_state">Государство отправления</option>
+        <option value="Enter_station">Станция входа на Россию</option>
+        <option value="Region_depart">Область отправления</option>
+        <option value="Road_depart">Дорога отправления</option>
+        <option value="Station_depart">Станция отправления</option>
+        <option value="Consigner">Грузоотправитель</option>
+        <option value="State_destination">Государство назначения</option>
+        <option value="Exit_station">Станция выхода из России</option>
+        <option value="Region_destination">Область назначения</option>
+        <option value="Road_destination">Дорога назначения</option>
+        <option value="Station_destination">Станция назначения</option>
+        <option value="Consignee">Грузополучатель</option>
+        <option value="Wagon_type">Тип вагона</option>
+        <!--<option value="eProperty">Призн собств вагона</option>
+        <option value="eWagon_owner">Собственник вагона</option>
+        <option value="ePayer">Плательщик</option>
+        <option value="eRoad_owner">Владелец пути необщего пользования</option>
+        <option value="eTransport_manager">Организация перевозки в порту</option>
+        <option value="eTons_declared">Тонн заявлено</option>
+        <option value="eTons_accepted">Тонн принято</option>
+        <option value="eWagon_declared">Вагонов(контейнеров) заявлено</option>
+        <option value="eWagon_accepted">Вагонов(контейнеров) принято</option>
+        <option value="eFiling_date">Дата подачи заявления</option>
+        <option value="eAgreement_date">Дата начала согласования</option>
+        <option value="eApproval_date">Дата утверждения</option>
+        <option value="eStop_date">Дата окончания действия</option>-->
+    </select>
+    <p>
+        <label id="ltext"  style="display: none;" for="text">Введите наименование: </label><input type="text" id="text" name="searchText" style="display: none;">
+    </p>
+    <p>
+        <input type="submit" value="Поиск"/>
+    </p>
+</form>
+{{end}}
