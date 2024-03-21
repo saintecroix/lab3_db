@@ -943,7 +943,7 @@ func (app *application) soloSearch(w http.ResponseWriter, r *http.Request) {
 	case "Wagon_type":
 		Rez = getApplication(app, db, w, " WHERE w.Name like '%%%s%%'", what)
 	case "Status":
-		Rez = getApplication(app, db, w, " WHERE a.Status like %%?%%", what)
+		Rez = getApplication(app, db, w, " WHERE a.Status like '%%%s%%'", what)
 	}
 
 	type Jopa struct {
@@ -991,7 +991,7 @@ func getApplication(app *application, db *sql.DB, w http.ResponseWriter, whereSt
 		"wagon as w on a.Wagon_type=w.id"
 
 	rez := make([]Application, 0)
-	get, err := db.Query(sel+whereString, what)
+	get, err := db.Query(fmt.Sprintf(sel+whereString, what))
 	if err != nil {
 		app.serverError(w, err)
 	}
