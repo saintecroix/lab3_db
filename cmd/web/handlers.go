@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -9,10 +10,10 @@ import (
 )
 
 type Gruz struct {
-	Id    int
-	Name  string
-	ETSNG string
-	GNG   string
+	Id    int    `json:"id"`
+	Name  string `json:"name"`
+	ETSNG string `json:"etsng"`
+	GNG   string `json:"gng"`
 }
 
 func getGruz(db *sql.DB) []Gruz {
@@ -170,42 +171,43 @@ type AllInfo struct {
 	Road      []Road
 	State     []State
 	Station   []Station
+	Wagon     []Wagon
 }
 type Application struct {
-	Id                  int
-	Number              int
-	Reg_date            string
-	Status              string
-	Provide_date        string
-	Departure_type      string
-	Goods               string
-	Origin_state        string
-	Enter_station       string
-	Region_depart       string
-	Road_depart         string
-	Station_depart      string
-	Consigner           string
-	State_destination   string
-	Exit_station        string
-	Region_destination  string
-	Road_destination    string
-	Station_destination string
-	Consignee           string
-	Wagon_type          string
-	Property            string
-	Wagon_owner         string
-	Payer               string
-	Road_owner          string
-	Transport_manager   string
-	Tons_declared       int
-	Tons_accepted       int
-	Wagon_declared      int
-	Wagon_accepted      int
-	Filing_date         string
-	Agreement_date      string
-	Approval_date       string
-	Start_date          string
-	Stop_date           string
+	Id                  int    `json:"id_app"`
+	Number              int    `json:"number_app"`
+	Reg_date            string `json:"regDate_app"`
+	Status              string `json:"status_app"`
+	Provide_date        string `json:"provideDate_app"`
+	Departure_type      string `json:"departureType_app"`
+	Goods               string `json:"goods_app"`
+	Origin_state        string `json:"originState_app"`
+	Enter_station       string `json:"enterStation_app"`
+	Region_depart       string `json:"regionDepart_app"`
+	Road_depart         string `json:"roadDepart_app"`
+	Station_depart      string `json:"stationDepart_app"`
+	Consigner           string `json:"consigner_app"`
+	State_destination   string `json:"stateDestination_app"`
+	Exit_station        string `json:"exitStation_app"`
+	Region_destination  string `json:"regionDestination_app"`
+	Road_destination    string `json:"roadDestination_app"`
+	Station_destination string `json:"stationDestination_app"`
+	Consignee           string `json:"consignee_app"`
+	Wagon_type          string `json:"wagonType_app"`
+	Property            string `json:"property_app"`
+	Wagon_owner         string `json:"wagonOwner_app"`
+	Payer               string `json:"payer_app"`
+	Road_owner          string `json:"roadOwner_app"`
+	Transport_manager   string `json:"transportManager_app"`
+	Tons_declared       int    `json:"tonsDeclared_app"`
+	Tons_accepted       int    `json:"tonsAccepted_app"`
+	Wagon_declared      int    `json:"wagonDeclared_app"`
+	Wagon_accepted      int    `json:"wagonAccepted_app"`
+	Filing_date         string `json:"filingDate_app"`
+	Agreement_date      string `json:"agreementDate_app"`
+	Approval_date       string `json:"approvalDate_app"`
+	Start_date          string `json:"startDate_app"`
+	Stop_date           string `json:"stopDate_app"`
 }
 
 func getWagon(db *sql.DB) []Wagon {
@@ -967,7 +969,12 @@ func (app *application) duoSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = ts.Execute(w, nil)
+	db := dbConnection()
+	defer db.Close()
+
+	wagon := getWagon(db)
+
+	err = ts.Execute(w, AllInfo{Wagon: wagon})
 	if err != nil {
 		app.serverError(w, err) // Использование помощника serverError()
 	}
@@ -1013,3 +1020,120 @@ func getApplication(app *application, db *sql.DB, w http.ResponseWriter, whereSt
 }
 
 /*----------------------------------------------------------------------------------------*/
+
+func dbConnection() *sql.DB {
+	db, errsql := sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/lab3")
+	if errsql != nil {
+		panic(errsql)
+	}
+	return db
+}
+
+/*----------------------------------------------------------------------------------------*/
+
+func (app *application) getSecondPerSearch(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Неверный метод запроса", http.StatusMethodNotAllowed)
+		return
+	}
+	type fromSite struct {
+		CheckData string `json:"checkFirstEl"`
+	}
+	decoder := json.NewDecoder(r.Body)
+	data := &fromSite{}
+	err := decoder.Decode(data)
+	if err != nil {
+		http.Error(w, "Ошибка при декодировании запроса", http.StatusBadRequest)
+		return
+	}
+
+	db := dbConnection()
+	defer db.Close()
+
+	getRaw, err := db.Query(fmt.Sprintf("SELECT * FROM `gruz` WHERE id in (SELECT Goods FROM `application` WHERE Wagon_type = %s);", data.CheckData))
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	defer getRaw.Close()
+	rez := make([]Gruz, 0)
+	for getRaw.Next() {
+		var a Gruz
+		err := getRaw.Scan(&a.Id, &a.Name, &a.ETSNG, &a.GNG)
+		if err != nil {
+			app.serverError(w, err)
+		}
+		rez = append(rez, a)
+	}
+	json, err := json.Marshal(rez)
+	if err != nil {
+		http.Error(w, "Ошибка при кодировании данных в JSON", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(json)
+}
+
+func (app *application) letDuoSearch(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Неверный метод запроса", http.StatusMethodNotAllowed)
+		return
+	}
+	type fromSite struct {
+		Duos string `json:"checkDuos"`
+		Gruz string `json:"checkGruz"`
+	}
+	decoder := json.NewDecoder(r.Body)
+	data := &fromSite{}
+	err := decoder.Decode(data)
+	if err != nil {
+		http.Error(w, "Ошибка при декодировании запроса", http.StatusBadRequest)
+		return
+	}
+	fmt.Println(data.Duos, data.Gruz)
+	db := dbConnection()
+	defer db.Close()
+	sel := "select a.id, a.Number, a.Reg_date, a.Status, a.Provide_date, a.Departure_type, g.Name as Goods, state.Name " +
+		"as Origin_state, st.Name as Enter_station, reg.Name as Region_depart, r.Name as Road_depart, st1.Name as " +
+		"Station_depart, con.Name as Consigner, state1.Name as State_destination, st2.Name as Exit_station, reg1.Name " +
+		"as Region_destination, r1.Name as Road_destination, st3.Name as Station_destination, con1.Name as Consignee, " +
+		"w.Name as Wagon_type, a.Property, a.Wagon_owner, a.Payer, a.Road_owner, a.Transport_manager, a.Tons_declared, " +
+		"a.Tons_accepted, a.Wagon_declared, a.Wagon_accepted, a.Filing_date, a.Agreement_date, a.Approval_date, " +
+		"a.Start_date, a.Stop_date from application as a inner join gruz as g on a.Goods=g.id inner join state on " +
+		"a.Origin_state=state.id inner join station as st on a.Enter_station=st.id inner join region as reg on " +
+		"a.Region_depart=reg.id inner join road as r on a.Road_depart=r.id inner join (select * from station) " +
+		"as st1 on a.Station_depart=st1.id inner join consignee as con on a.Consigner=con.id inner join (select * from " +
+		"state) as state1 on a.State_destination=state1.id inner join (select * from station) as st2 on " +
+		"a.Exit_station=st2.id inner join (select * from region) as reg1 on a.Region_destination=reg1.id inner join " +
+		"(select * from road) as r1 on a.Road_destination=r1.id inner join (select * from station) as st3 on " +
+		"a.Station_destination=st3.id inner join (select * from consignee) as con1 on a.Consignee=con1.id inner join " +
+		"wagon as w on a.Wagon_type=w.id"
+
+	whereString := " WHERE w.id = %s and g.id = %s"
+	rez := make([]Application, 0)
+	get, err := db.Query(fmt.Sprintf(sel+whereString, data.Duos, data.Gruz))
+	if err != nil {
+		app.serverError(w, err)
+	}
+	defer get.Close()
+	for get.Next() {
+		var v Application
+		err := get.Scan(&v.Id, &v.Number, &v.Reg_date, &v.Status, &v.Provide_date, &v.Departure_type, &v.Goods,
+			&v.Origin_state, &v.Enter_station, &v.Region_depart, &v.Road_depart, &v.Station_depart, &v.Consigner,
+			&v.State_destination, &v.Exit_station, &v.Region_destination, &v.Road_destination, &v.Station_destination,
+			&v.Consignee, &v.Wagon_type, &v.Property, &v.Wagon_owner, &v.Payer, &v.Road_owner, &v.Transport_manager,
+			&v.Tons_declared, &v.Tons_accepted, &v.Wagon_declared, &v.Wagon_accepted, &v.Filing_date, &v.Agreement_date,
+			&v.Approval_date, &v.Start_date, &v.Stop_date)
+		if err != nil {
+			app.serverError(w, err)
+		}
+		rez = append(rez, v)
+	}
+	jsonApps, err := json.Marshal(rez)
+	if err != nil {
+		http.Error(w, "Ошибка при кодировании данных в JSON", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonApps)
+}

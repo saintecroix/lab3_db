@@ -4,47 +4,66 @@
 
 {{define "main"}}
 <label>Поиск по двум атрибутам: </label>
-<form action="/duoSearch/firstItem" method="post">
-    <select id="Goods" name="Goods">
-        <option value="">Выберите первый атрибут</option>
-        <!--<option value="eNumber">Номер заявки</option>
-        <option value="eReg_date">Дата регистрации</option>-->
-        <option value="Status">Статус заявки</option>
-        <!--<option value="eProvide_date">Дата подачи вагона</option>
-        <option value="eDeparture_type">Вид отправления</option>-->
-        <option value="Goods">Наименование груза</option>
-        <option value="Origin_state">Государство отправления</option>
-        <option value="Enter_station">Станция входа на Россию</option>
-        <option value="Region_depart">Область отправления</option>
-        <option value="Road_depart">Дорога отправления</option>
-        <option value="Station_depart">Станция отправления</option>
-        <option value="Consigner">Грузоотправитель</option>
-        <option value="State_destination">Государство назначения</option>
-        <option value="Exit_station">Станция выхода из России</option>
-        <option value="Region_destination">Область назначения</option>
-        <option value="Road_destination">Дорога назначения</option>
-        <option value="Station_destination">Станция назначения</option>
-        <option value="Consignee">Грузополучатель</option>
-        <option value="Wagon_type">Тип вагона</option>
-        <!--<option value="eProperty">Призн собств вагона</option>
-        <option value="eWagon_owner">Собственник вагона</option>
-        <option value="ePayer">Плательщик</option>
-        <option value="eRoad_owner">Владелец пути необщего пользования</option>
-        <option value="eTransport_manager">Организация перевозки в порту</option>
-        <option value="eTons_declared">Тонн заявлено</option>
-        <option value="eTons_accepted">Тонн принято</option>
-        <option value="eWagon_declared">Вагонов(контейнеров) заявлено</option>
-        <option value="eWagon_accepted">Вагонов(контейнеров) принято</option>
-        <option value="eFiling_date">Дата подачи заявления</option>
-        <option value="eAgreement_date">Дата начала согласования</option>
-        <option value="eApproval_date">Дата утверждения</option>
-        <option value="eStop_date">Дата окончания действия</option>-->
+<form id="my-form">
+    <label>Первый атрибут: </label>
+    <select id="Duos" name="Duos">
+        <option value="">Выберите тип вагонов</option>
+        {{ range .Wagon }}
+        <option value="{{ .Id }}">{{ .Name }}</option>
+        {{ end }}
     </select>
+    <p></p>
     <p>
-        <label id="ltext"  style="display: none;" for="text">Введите наименование: </label><input type="text" id="text" name="searchText" style="display: none;">
+        <label>Второй атрибут: </label>
+        <select id="Gruz-list" name="gruz-list">
+            <option value="">Выберите тип груза</option>
+        </select>
     </p>
     <p>
-        <input type="submit" value="Поиск"/>
+        <input id="search-button" type="submit" value="Поиск"/>
     </p>
 </form>
+<div id="table-wrapper" >
+    <table>
+        <thead>
+        <tr>
+            <th scope="col">Номер заявки</th>
+            <th scope="col">Дата регистрации</th>
+            <th scope="col">Статус</th>
+            <th scope="col">Дата подачи вагона</th>
+            <th scope="col">Вид отправления</th>
+            <th scope="col">Наименование груза</th>
+            <th scope="col">Государство отправления</th>
+            <th scope="col">Станция входа на Россию</th>
+            <th scope="col">Область отправления</th>
+            <th scope="col">Дорога отправления</th>
+            <th scope="col">Станция отправления</th>
+            <th scope="col">Грузоотправитель</th>
+            <th scope="col">Государство назначения</th>
+            <th scope="col">Станция выхода из России</th>
+            <th scope="col">Область назначения</th>
+            <th scope="col">Дорога назначения</th>
+            <th scope="col">Станция назначения</th>
+            <th scope="col">Грузополучатель</th>
+            <th scope="col">Тип вагона</th>
+            <th scope="col">Призн собств вагона</th>
+            <th scope="col">Собственник вагона</th>
+            <th scope="col">Плательщик</th>
+            <th scope="col">Владелец пути необщего пользования</th>
+            <th scope="col">Организация перевозки в порту</th>
+            <th scope="col">Тонн заявлено</th>
+            <th scope="col">Тонн принято</th>
+            <th scope="col">Вагонов(контейнеров) заявлено</th>
+            <th scope="col">Вагонов(контейнеров) принято</th>
+            <th scope="col">Дата подачи заявления</th>
+            <th scope="col">Дата начала согласования</th>
+            <th scope="col">Дата утверждения</th>
+            <th scope="col">Дата начала действия</th>
+            <th scope="col">Дата окончания действия</th>
+        </tr>
+        </thead>
+        <tbody id="app-table-body">
+        </tbody>
+    </table>
+</div>
 {{end}}
